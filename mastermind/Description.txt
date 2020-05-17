@@ -1,5 +1,4 @@
-In this project, you will write a complete program that allows the user to play a game of 
-Mastermindagainst the computer.  A Mastermind game has the following steps:
+A Mastermind game has the following steps:
     1.  The codemaker selects a code, a random sequence of 4 digits, each of which is in the range
         [0,5].
     2.  The codebreaker is prompted to enter a guess, a 4-digit sequence.
