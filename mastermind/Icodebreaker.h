@@ -10,7 +10,16 @@
     (d) a function that prints a response
 */
 
+#include <iostream>
 
-class Codebreaker {
+template <class T>
+class Codebreaker<T> {
     
+    public:
+        
+        bool sameResponse();
+
+        void printHint();
+
+}
     
