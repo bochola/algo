@@ -1,8 +1,10 @@
 // code.cpp
-// File to store the class "code"
 
+#include <iostream>
 #include <cstdlib>
 #include <array>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "Icodemaker.h"
 
@@ -17,14 +19,31 @@ class Code: public Codemaker<int> {
     protected:
         int code[4] = {-1, -1, -1, -1};
         
+    private:
+
+        bool goodInputs() {
+            
+            bool soFar = true;
+
+            for (int i = 0; i < 4; i++) {
+                soFar = soFar && (code[i] <= 5) && (code[i] >= 0);
+            }
+            
+            return soFar;
+        }
+
     public:
         
         // A constructor to allow the input of guesses
-        void SetCode(int guess[4]) {
+        void setCode() {
+            cout << "Please enter 4 integers between 0 and 5"
+                " (inclusive), separated by a space: ";
             
             for (int i = 0; i < 4; i++) {
-                code[i] = guess[i];
+                cin >> code[i];
             }
+            
+            //cout << "Thank you" << endl;
         }
 
 
@@ -39,8 +58,10 @@ class Code: public Codemaker<int> {
     
         // Find the number of integers of the correct value in the
         // correct location
-        int checkCorrect(Code test) {
+        int checkCorrect(Codemaker<int> given) {
         
+            Code& test = dynamic_cast<Code&>(given);
+            
             int correct = 0;
     
             for (int i = 0; i < 5; i++) {
@@ -57,8 +78,10 @@ class Code: public Codemaker<int> {
     
         // Find the number of integers of the correct value in the
         // wrong location
-        public int checkIncorrect(Code test) {
+        int checkIncorrect(Codemaker<int> given) {
     
+            Code& test = dynamic_cast<Code&>(given);
+            
             int almost = 0;
     
             for (int i = 0; i < 5; i++) {
@@ -74,6 +97,16 @@ class Code: public Codemaker<int> {
             }
     
             return almost;
+        }
+
+        // Prints the code to the screen
+        void printCode() {
+            
+            for (int i = 0; i < 3; i++) {
+                cout << code[i] << ", ";
+            }
+            
+            cout << code[3] << endl;
         }
         
 };
