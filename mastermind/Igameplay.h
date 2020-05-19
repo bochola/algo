@@ -1,7 +1,6 @@
 // Igameplay.h
 // The interface class for all iterations of playing a Mastermind game
 
-
 #include "Icodemaker.h"
 
 #ifndef GAMEPLAY_H

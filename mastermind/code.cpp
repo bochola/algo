@@ -64,7 +64,7 @@ class Code: public Codemaker<int> {
             
             int correct = 0;
     
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
                 int value = code[i];
                 int attempt = test.code[i];
     
@@ -84,10 +84,10 @@ class Code: public Codemaker<int> {
             
             int almost = 0;
     
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 4; i++) {
                 int attempt = test.code[i];
     
-                for (int j = 0; j < 5; j++) {
+                for (int j = 0; j < 4; j++) {
                     int value = code[j];
     
                     if ((attempt == value) && (i != j)) {
