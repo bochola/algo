@@ -1,5 +1,8 @@
 // deck.cpp
 
+#include <vector>
+#include <algorithm>
+
 #include "card.cpp"
 
 using namespace std;
@@ -14,10 +17,47 @@ class Deck {
 
         void initializeDeck() {
             
-            &head = Card(2, 'D');
+            //printf("Initializing deck...\n");
+
+            Card initHead = Card(2, 'D');
+            printf("Printing card to be assigned as head\n");
+            initHead.printCard();
+            head = &initHead;
             
-            // Initialize rest of Diamonds in loop
-            // Repeat with rest of suits, C, H, S
+            printf("Printing head after initializing\n");
+            Card retrieve = *head;
+            retrieve.printCard();
+
+            char suits[4] = {'D', 'C', 'H', 'S'};
+            
+            Card* last = head;
+            
+            // Cycle through the suits
+            for (int i = 0; i < 4; i++) {
+                
+                char suit = suits[i];
+                //printf("Creating suit %d\n", i+1);
+
+                // Create cards valued 2 - 14 and add to list
+                for (int j = 0; j < 13; j++) {
+                    
+                    // If the list starts off empty        
+                    if ((i == 0) && (j == 0)) {
+                        continue;
+                    }
+                    
+                    Card add = Card(j + 2, suit);
+                    Card* newAdd = &add;
+                    Card newLast = *last;
+
+                    newLast.setNext(newAdd);
+                    add.setLast(last);
+
+                    last = &add;
+                }
+            }
+
+            //printf("Deck initialization complete\n");
         }
 
         void orderDeck() {
@@ -29,19 +69,16 @@ class Deck {
         Card grabCard(int node) {
             // start at head (1) and travel down the sorted node list
             int count = 1;
-            Card cur;
+            Card* cur = head;
+            printf("Grabbing card at node %d\n", node);
             
-            // Start at the head, and as long as the (cur)rent Card
-            // is not null, traverse down the linked list until
-            // reaching the desired node.
-            for (cur = &head; cur; cur = cur.getNext()) {
-                if (count == node) {
-                    break;
-                }
-                count++;
+            for (int i = 0; i < node - 1; i++) {
+                Card temp = *cur;
+                temp.printCard();
+                cur = temp.getNext();
             }
 
-            return cur;
+            return *cur;
         }
 
         int replace_helper(char suit) {
@@ -75,7 +112,6 @@ class Deck {
             if (count >= 52) {
                throw "You done run out of cards!";
             }
-            
 
             Card test = grabCard(order[count]);
 
@@ -104,10 +140,12 @@ class Deck {
         }
 
         void shuffle() {
+            printf("Shuffling deck...\n");
             random_shuffle(order.begin(), order.end()); 
         }
 
         Card deal() {
+            printf("Dealing card..\n");
             return deal_helper(0);    
         }
 
@@ -117,10 +155,8 @@ class Deck {
             node_num += r_card.getValue() - 1; // Values start at 2
             
             // -1 for index adjustment. 
-            swap(order[node_num - 1], order.back())
+            swap(order[node_num - 1], order.back());
 
         }
-        
-
 
 };

@@ -1,0 +1,33 @@
+I'm not entirely sure why my Card constructor is not working.
+I believe I have put in place all the things necessary, but whenever
+I try to initialize the Deck and iterate through the creation of all
+52 cards, I run into the issue where weird characters get put in. 
+When I try to print the output during the initialization, everything
+looks normal, but for some reason as soon as I try to DO anything with
+the cards in the deck, they freak out and give me non-printable chars.
+
+I started on this project late, Saturday afternoon instead of my usual
+Wednesday, and I've been working on this issue for a solid 13 hours but
+I can't figure out why I'm getting this problem.
+
+I also didn't write my own shuffling algorithm because I wanted to make
+sure that my code actually worked before I tackled the hard part. I am
+familiar with making sorting algorithms, but doing the opposite has
+posed quite a challenge for me.
+
+My initial thought on approaching it would be to find the maximum
+number of items to be randomized, and then take the unsigned time
+signature and then do 
+    int new_pos = time % #num_items
+in order to get a rng seed that would always be unique. Then I would
+take the first item in the list and swap it with the new_pos. Going
+down the list this way would guarantee that each item is seemingly
+randomized, although I am not sure about the time efficiency of this
+method. This could definitely be improved by using the binary method
+and running muliple sections in parallel.
+
+Anyway, I'm upset that I can't finish the assignment in time, however
+it is very late and I need sleep before class today.
+
+Thanks for reading,
+Ben
