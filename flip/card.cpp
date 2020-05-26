@@ -17,9 +17,9 @@ class Card {
         bool used; // A flag to keep track of whether this card has
                    // been drawn already
         
-        Card next; // The next Card in the deck
+        Card next = NULL; // The next Card in the deck
 
-        Card last; // The previous Card in the deck
+        Card last = NULL; // The previous Card in the deck
 
     private:
 
@@ -63,6 +63,15 @@ class Card {
             used = false;
         }
         
+        // Copy constructor
+        Card(const Card &d_card) {
+            suit = d_card.suit;
+            value = d_card.value;
+            used = d_card.used;
+            next = d_card.next;
+            last = d_card.last;
+        }
+
         // Returns the suit of the called card
         char getSuit() {
             return suit;
