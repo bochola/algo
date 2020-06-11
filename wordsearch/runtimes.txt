@@ -1,0 +1,36 @@
+Algorithm           Runtime (s)   Predicted complexity
+
+Insertion Sort      1212.8        O(k^2 + n^2*l*lg(k))
+Hash Table           218.98       O(k*l + n^2*l*(l+k/s))
+Heap Sort             46.085      O(k*lg(k) + n^2*l*lg(k))
+Merge Sort            49.724      O(k*lg(k) + n^2*l*lg(k))
+Quick Sort            45.047      O(k*lg(k) + n^2*l*lg(k))
+
+n = side length of array
+k = number of words in word list
+l = length of longest word
+s = slots in hash table
+k/s = hash table loading factor
+
+Above is the table of runtimes for the different algorithms. It is
+not entirely surprising that Insertion Sort took so long,
+considering that its worst case runtime is O(n^2). Quick Sort also has
+the same worst case time complexity, but where Insertion Sort's 
+average complexity is the same as its worst, Quick Sort has an average
+runtime of O(n log n), which most likely contributed to its faster
+time. Merge Sort was expectedly faster, with an average AND worst case
+runtimes of O(n log n). Since Heap Sort boasts the same time 
+complexity stats as Merge Sort, it makes sense that they completed
+almost within six seconds of each other. 
+
+Our hash table did not perform as well as the tried and true
+algorithms, however there is some room for optimization, so that total
+run time could be improved. One optimization present in the vector-based
+algorithms that we were not able to implement in the hash table was early
+breaking. In the vector-based algorithms, since similar words are grouped 
+near each other, we could detect when a given direction would no longer 
+have words in it and break early. In a hash table, this would be impractical. 
+We only kept the length of the longest word. As such, when searching the 
+grid with the hash table dictionary, we had to search every trace up to 
+the length of the longest word. This significantly increased runtimes.
+
