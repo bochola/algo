@@ -63,7 +63,7 @@ class Card {
                 throw "Improper value provided. A value can be from "
                       "2 - 14\n";
             }
-            //printf("Created the %d of %c\n", value, suit);
+            printf("Created the %d of %c\n", value, suit);
             used = false;
         }
         
@@ -169,6 +169,7 @@ class Card {
                 full_val = to_string(value);
             }
 
+            printf("the %d of %c\n", value, suit);
             printf("the %s of %s\n", full_val, full_suit);
             
         }

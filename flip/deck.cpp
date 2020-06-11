@@ -10,7 +10,7 @@ using namespace std;
 class Deck {
     
     protected: 
-        Card* head; // A pointer to the front of the deck
+        Card* head = NULL; // A pointer to the front of the deck
         vector<int> order; // A list to keep track of the order of
                            // the deck
     private:
