@@ -1,0 +1,44 @@
+Instructions for installing Boost Library within Xcode on a computer running the Mac Os
+
+Step 1.
+Download boost_1_57_0.tar.bz2 from Blackboard to your local directory in hard drive.
+
+Step 2.
+Open Terminal, go to the directory where you want to put the Boost installation, execute
+
+tar --bzip2 -xf /path/to/boost_1_57_0.tar.bz2
+
+then boost_1_57_0 is created in this directory and its absolute path is, for example, /path/to/boost_1_57_0
+
+Step 3.
+Open Xcode and create a new project
+
+Step 4.
+Select the project
+Click on Build Settings
+Go to Search Paths section
+Add /path/to/boost_1_57_0 to Header Search Paths
+
+Step 5.
+Configuration completes. You could run a simple test as shown below:
+
+Note: the following program reads a sequence of integers from standard input, uses Boost.Lambda to multiply each number by three, and writes them to standard output:
+
+#include <boost/lambda/lambda.hpp>
+#include <iostream>
+#include <iterator>
+#include <algorithm>
+
+int main()
+{
+    using namespace boost::lambda;
+    typedef std::istream_iterator<int> in;
+
+    std::for_each(
+        in(std::cin), in(), std::cout << (_1 * 3) << " " );
+}
+
+Copy the text of this program above into main.cpp in your project, then build and run.
+
+
+
