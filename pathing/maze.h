@@ -3,6 +3,7 @@
 #include <fstream>  
 #include <exception>
 #include <string>
+#include <cmath> // too lazy to define absolute value
 // STL Libraries
 #include <algorithm>
 #include <iterator> 
@@ -102,6 +103,19 @@ class Maze {
          */ 
         bool pointIndexInRange(int row, int col);
 
+        /**
+         * Adds a vertex to a graph given an existing vertex counter,
+         * and a pair<int,int> value to input into the vertex properties.
+         * Increments the vertex counter.
+         *
+         * @param g the Graph object
+         * @param vertex the vertex counter
+         * @param x the first value in the pair<int,int> object in the vertex properties
+         * @param y the second value in the pair<int,int> object in the vertex properties
+         * @return The vertex descriptor of the new vertex.
+         */
+        Graph::vertex_descriptor& addVertex(Graph& g, int& vertex, int x, int y);
+
     public:
         /**
          * Default constructor for Maze.
@@ -126,6 +140,11 @@ class Maze {
          */ 
         void mapMazeToGraph(Graph &g);
 
+        /** Returns the start and end points of the maze as a std::pair.
+         * @return A std::pair containing the start and end (in that order)
+         */
+        std::pair<Graph::vertex_descriptor, Graph::vertex_descriptor> getGraphPoints();
+
         /**
          * Prints the path represented by the vertices in a stack, repeatedly
          * calls print() to show each step of the path.
@@ -137,13 +156,18 @@ class Maze {
          */ 
         void printPath(Graph::vertex_descriptor end, stack<Graph::vertex_descriptor> &s, Graph g);
 
+        /** Returns a string representing this maze object.
+         * @return A string representing this maze
+         */
+        std::string toString();
+
         /**
          * Mark all nodes in a graph as not visited.
          * 
          * @param g the graph
          * @return void
          */ 
-        void clearVisited(Graph &g);
+        static void clearVisited(Graph &g);
 
         /**
          * Sets all the node weights in a graph to a specified weight.
@@ -152,7 +176,7 @@ class Maze {
          * @param w the weight
          * @return void
          */ 
-        void setNodeWeights(Graph &g, int w);
+        static void setNodeWeights(Graph &g, int w);
 
         /**
          * Unmark all nodes in a graph.
@@ -160,7 +184,7 @@ class Maze {
          * @param g the graph
          * @return void
          */ 
-        void clearMarked(Graph &g);
+        static void clearMarked(Graph &g);
 
         /**
          * Output operator for a Graph object. Prints out all nodes and their 
@@ -211,10 +235,22 @@ ostream &operator<<(ostream &ostr, const Graph &g);
 /**
  * Reads a graph in from a file.
  * @param infile The source file containing the graph.
- * @return A graph object.
+ * @return By out-parameter, a graph object.
+ * @return By out-parameter, the start and goal points of the graph.
  * @throw If the graph file could not be parsed as expected.
  */
-Graph readGraph(std::ifstream& infile);
+void readGraph(std::ifstream& infile, Graph& g, Graph::vertex_descriptor& start, Graph::vertex_descriptor& end);
+
+/**
+ * Depth First Search (recursive) subroutine.
+ * Performs the recursion in the depth first search, and attempts to find the path.
+ *
+ * @param g the Grpah object
+ * @param curr the current vertex
+ * @param end the end vertex to find
+ * @return void
+ */
+void DFSRecursiveHelper(Graph& g, Graph::vertex_descriptor& curr, Graph::vertex_descriptor& end);
 
 /**
  * Looks for a path from the start cell to the goal cell using depth-first search.
@@ -263,7 +299,7 @@ void findShortestPathBFS(Graph &g, Graph::vertex_descriptor &start, Graph::verte
  * @param g the Graph
  * @param start The starting point of the search.
  * @param end The ending point of the search.
- * @return A stack containing the path followed, end on top.
+ * @return A stack containing the path followed, start on top.
  */ 
 stack<Graph::vertex_descriptor> wavefront(Graph &g, Graph::vertex_descriptor &start, Graph::vertex_descriptor &end);
 
@@ -273,7 +309,7 @@ stack<Graph::vertex_descriptor> wavefront(Graph &g, Graph::vertex_descriptor &st
  * @param g the Graph
  * @param start The starting point of the search.
  * @param end The ending point of the search.
- * @return A stack containing the path followed, end on top.
+ * @return A stack containing the path followed, start on top.
  */ 
 stack<Graph::vertex_descriptor> aStar(Graph &g, Graph::vertex_descriptor &start, Graph::vertex_descriptor &end);
 
@@ -314,5 +350,15 @@ void dijkstra(Graph &g, Graph::vertex_descriptor source);
  * @return true If a path exists to every node and no negative loops are reachable from source.
  */
 bool bellmanFord(Graph &g, Graph::vertex_descriptor source);
+
+/** Returns the 4-way/orthogonal taxicab distance from v1 to v2.
+ * Always nonnegative.
+ * Relies on the VertexProperties.cell attribute to work.
+ * (severe ARML 2016 flashbacks)
+ * @param g The graph that v1 and v2 belong to.
+ * @param v1, v2 The vertices whose endpoints are used.
+ * @return The 4-way/orthogonal taxicab distance between v1 and v2.
+ */
+int taxicab(Graph& g, Graph::vertex_descriptor v1, Graph::vertex_descriptor v2);
 
 #endif

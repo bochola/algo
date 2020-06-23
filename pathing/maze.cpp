@@ -27,6 +27,10 @@ Maze::Maze(ifstream *in) {
     // Initialize maze vector
     this->maze = vector<vector<bool> >(this->rows, vector<bool>(this->cols));
 
+    // Set default start and end
+    startPoint = std::pair<int, int>(0, 0);
+    endPoint = std::pair<int, int>(rows - 1, cols - 1);
+
     // Hold each line
     string line = "";
         
@@ -39,13 +43,26 @@ Maze::Maze(ifstream *in) {
     // Loop through all vectors and fill maze
     while(getline(*this->file, line)) {
         if(line.length() > 1) {
-            for(int j = 0; j < this->cols; j++) {
-                if(j != 100)
-                    temp = line[j+1];
+            for(int j = 0; j <= this->cols; j++) {
+                temp = line[j];
 
                 // If character is '0' then maze is free, otherwise it is noT
-                if(temp == 'O') this->maze[i][j] = true;
-                else this->maze[i][j] = false;
+                switch (temp) {
+                case 'O':
+                  maze[i][j] = true;
+                  break;
+                case '+':
+                  maze[i][j] = true;
+                  startPoint = std::pair<int, int>(i, j);
+                  break;
+                case '*':
+                  maze[i][j] = true;
+                  endPoint = std::pair<int, int>(i, j);
+                  break;
+                case 'X':
+                  maze[i][j] = false;
+                  break;
+                }
             }
             i++;
         }
@@ -55,45 +72,98 @@ Maze::Maze(ifstream *in) {
     this->file->close();
 }
 
-void Maze::mapMazeToGraph(Graph &g) {
-    int vertex = 0;
-    Graph::vertex_descriptor desc;
+Graph::vertex_descriptor& Maze::addVertex(Graph& g, int& vertex, int x, int y) {
+  Graph::vertex_descriptor output = add_vertex(g);
+  g[vertex].cell = std::pair<int, int>(x, y);
+  g[vertex].weight = INITIAL_WEIGHT;
+  vertex++;
+  return output;
+}
+void Maze::mapMazeToGraph(Graph& g) {
+  // Vertex counter
+  int vertex = 0;
 
-    for(int i = 0; i < this->rows; i++) {
-        for(int j = 0; j < this->cols; j++) {
-            if(maze[i][j]) {
-                // Add vertex
-                desc = boost::add_vertex(g);
-                
-                // Set vertex cell
-                g[vertex].cell = std::pair<int,int>(i,j);
-                g[vertex].weight = INITIAL_WEIGHT;
-
-                // Set predesor vertex and add edge
-                if(vertex != 0) {
-                    g[vertex].pred = vertex-1;
-                    EdgeProperties e;
-                    e.weight = INITIAL_WEIGHT;
-                    add_edge(vertex-1,vertex,e,g);
-                }
-
-                // If the first vertex hold start point
-                if(vertex == 0) {
-                    this->startPoint = g[vertex].cell;
-                    this->startPoint_v = desc;
-                }
-
-                // Next vertex
-                vertex++;
-            }
+  // Add vertex for each area of the maze that is free
+  for (int row = 0; row < this->rows; row++) {
+    for (int col = 0; col < this->cols; col++) {
+      if (this->maze[row][col]) {
+        //std::cout << row << ' ' << col << std::endl;
+        auto vd = addVertex(g, vertex, row, col);
+        if (startPoint.first == row && startPoint.second == col) {
+          startPoint_v = vd;
         }
+        else if (endPoint.first == row && endPoint.second == col) {
+          endPoint_v = vd;
+        }
+      }
     }
-    // Hold end point
-    this->endPoint = g[vertex].cell;
-    this->endPoint_v = desc;
+  }
+
+  // Add edges between vertices
+  for (int v = 0; v < vertex; v++) {
+    // Get cell of current vertex
+    auto loc = g[v].cell;
+    int row = loc.first;
+    int col = loc.second;
+
+    // Loop through all remaining vertices
+    for (int i = v + 1; i < vertex; i++) {
+      // Get cell of next vertex
+      auto loc_ = g[i].cell;
+      int row_ = loc_.first;
+      int col_ = loc_.second;
+
+      // Add edges between current vertex and vertex next to it
+      if (row == row_ && (col + 1) == col_) {
+        EdgeProperties e;
+        e.weight = INITIAL_WEIGHT;
+        add_edge(v, i, e, g);
+        add_edge(i, v, e, g);
+      }
+      // Add edges between current vertex and vertex below it
+      if ((row + 1) == row_ && col == col_) {
+        EdgeProperties e;
+        e.weight = INITIAL_WEIGHT;
+        add_edge(v, i, e, g);
+        add_edge(i, v, e, g);
+      }
+    }
+  }
+}
+    
+std::pair<Graph::vertex_descriptor, Graph::vertex_descriptor> Maze::getGraphPoints()
+{
+  return std::pair<Graph::vertex_descriptor, Graph::vertex_descriptor>(startPoint_v, endPoint_v);
 }
 
-void Maze::printPath(Graph::vertex_descriptor end, stack<Graph::vertex_descriptor> &s, Graph g) {}
+void Maze::printPath(Graph::vertex_descriptor end, stack<Graph::vertex_descriptor> &s, Graph g) {
+  std::string output = toString();
+  output.at((g[end].cell.first) * (cols + 1) + g[end].cell.second) = '+';
+
+  while (s.size() > 0) {
+    Graph::vertex_descriptor vd = s.top();
+    s.pop();
+    output.at((g[vd].cell.first) * (cols + 1) + g[vd].cell.second) = s.empty() ? '*' : '.';
+  }
+
+  std::cout << output << std::endl;
+}
+
+std::string Maze::toString() {
+  std::string output;
+  // preventing excessive string resizes
+  output.reserve(rows * (cols + 1) + 1);
+
+  // iterating through the maze
+  for (std::vector<bool> r : maze) {
+    for (bool b : r) {
+      output.push_back(b ? ' ' : 'X');
+    }
+    output.push_back('\n');
+  }
+  output.pop_back();
+  return output;
+}
 
 void Maze::clearVisited(Graph &g) {
     int vertices = num_vertices(g);
@@ -213,22 +283,18 @@ ostream& operator<<(ostream& ostr, const Graph& g) {
     return ostr;
 }
 
-Graph readGraph(std::ifstream& infile) {
+void readGraph(std::ifstream& infile, Graph& g, 
+  Graph::vertex_descriptor& start, Graph::vertex_descriptor& end) {
     // stores the number of vertices in the graph
     int order;
     infile >> order;
 
     // create new graph
-    Graph g(order);
+    g = Graph(order);
 
     // read in start and end nodes
-    int start;
     infile >> start;
-    // what are we supposed to do with this?
-
-    int end;
     infile >> end;
-    // what about this?
 
     // read in edges
     while (infile && infile.peek() != '.') {
@@ -237,52 +303,226 @@ Graph readGraph(std::ifstream& infile) {
         Graph::edge_descriptor edgeNew = boost::add_edge(vertexSource, vertexTarget, g).first;
         g[edgeNew].weight = weight;
     }
-
-    return g;
 }
 
-void findPathDFSStack(Graph &g, stack<Graph::vertex_descriptor> &s, Graph::vertex_descriptor &start, Graph::vertex_descriptor &end) {
-    // TODO Fix
-    /*
-    // Clear visited nodes
-    int vs = num_vertices(g);
-    for(int i = 0; i < vs; i++)
-        g[i].visited = 0;
+void DFSRecursiveHelper(Graph& g, Graph::vertex_descriptor& curr, Graph::vertex_descriptor& end) {
+  // Mark the current node as visited
+  g[curr].visited = 2;
 
-    // Push the starting node
-    s.push(start);
-
-    while(!s.empty()) {
-        // Pop a vertex from the stack
-        Graph::vertex_descriptor v = s.top();
-        s.pop();
-
-        if(g[v].visited == 0) {
-            cout << v << " ";
-            g[v].visited = 1;
-        }
-
-        // Get a pair containing iterators pointing to the beginning and end of the
-        // list of nodes adjacent to node v
-        pair<Graph::adjacency_iterator, Graph::adjacency_iterator> vItrRange = adjacent_vertices(v,g);
-
-        
-
-        // Loop over adjacent nodes in the graph
-        for (Graph::adjacency_iterator vItr= vItrRange.first; vItr != vItrRange.second; ++vItr) {
-            if(g[*vItr].visited == 0)
-                s.push(*vItr);
-        }
-    }
+  // Exit once end vertex has been found
+  if (g[curr].cell.first == g[end].cell.first && g[curr].cell.second == g[end].cell.second) {
+    // Outputting for now
+    cout << curr << ": " << g[curr].cell.first << "x" << g[curr].cell.second << " ";
+    cout << "Path found" << endl;
     cout << endl;
-    */
+    return;
+  }
+
+  // Outputing for now
+  cout << curr << ": " << g[curr].cell.first << "x" << g[curr].cell.second << " ";
+
+  // Get a pair containing iterators pointing to the beginning and end of the
+  // list of nodes adjacent to node v
+  pair<Graph::adjacency_iterator, Graph::adjacency_iterator> vItrRange = adjacent_vertices(curr, g);
+
+  // Loop over adjacent nodes in the graph, and push them into the stack
+  for (Graph::adjacency_iterator vItr = vItrRange.first; vItr != vItrRange.second; vItr++) {
+    // If a vertex hasnt been marked make recursive call
+    if (g[*vItr].visited == 0) {
+      Graph::vertex_descriptor v = *vItr;
+      DFSRecursiveHelper(g, v, end);
+    }
+  }
 }
 
+void findPathDFSRecursive(Graph& g, Graph::vertex_descriptor& start, Graph::vertex_descriptor& end) {
+  // Outputting for now
+  cout << "Finding Path using DFS Stack" << endl;
 
-void findPathBFS(Graph &g, stack<Graph::vertex_descriptor> &s, Graph::vertex_descriptor &start, Graph::vertex_descriptor &end) {
-    
+  // Clear visited nodes 
+  Maze::clearVisited(g);
+
+  // Call DFS Helper
+  DFSRecursiveHelper(g, start, end);
+}
+
+void findPathDFSStack(Graph& g, stack<Graph::vertex_descriptor>& s, Graph::vertex_descriptor& start, Graph::vertex_descriptor& end) {
+  // Outputting for now
+  cout << "Finding Path using DFS Stack" << endl;
+
+  // Clear visited nodes
+  Maze::clearVisited(g);
+
+  // Push the starting node
+  s.push(start);
+
+  while (!s.empty()) {
+    // Pop a vertex from the stack
+    Graph::vertex_descriptor v = s.top();
+    s.pop();
+
+    if (g[v].cell.first == g[end].cell.first && g[v].cell.second == g[end].cell.second) {
+      g[v].visited = 2;
+
+      // Outputting for now
+      cout << v << ": " << g[v].cell.first << "x" << g[v].cell.second << " ";
+      cout << "Path found" << endl;
+      cout << endl;
+      return;
+    }
+    // Mark vertex as visited (don't what to mark it, so marking it using visted parameter)
+    if (g[v].visited == 0) {
+      g[v].visited = 2;
+
+      // Outputing for now
+      cout << v << ": " << g[v].cell.first << "x" << g[v].cell.second << " ";
+    }
+
+    // Get a pair containing iterators pointing to the beginning and end of the
+    // list of nodes adjacent to node v
+    pair<Graph::adjacency_iterator, Graph::adjacency_iterator> vItrRange = adjacent_vertices(v, g);
+
+    // Loop over adjacent nodes in the graph, and push them into the stack
+    for (Graph::adjacency_iterator vItr = vItrRange.first; vItr != vItrRange.second; vItr++) {
+      if (g[*vItr].visited == 0)
+        s.push(*vItr);
+    }
+  }
+
+  // Outputting for now
+  cout << "End not found" << endl;
+  cout << endl;
+}
+
+stack<Graph::vertex_descriptor> aStar
+(Graph& g, Graph::vertex_descriptor& start, Graph::vertex_descriptor& end) {
+  // this code is more or less copy-pasted from the dijkstra function
+
+  // note that node weight is pulling double-duty here.
+  // when visited = 0 (white), weight = infinity
+  // when visited = 1 (grey, frontier node), weight = "F-cost" (estimated cost)
+  // when visited = 2 (black, interior node), weight = "G-cost" (cost from start)
+
+  std::stack<Graph::vertex_descriptor> output;
+  heapV<Graph::vertex_descriptor, Graph> pq;
+  
+  // initializing/resetting all vertices for search
+  std::pair<Graph::vertex_iterator, Graph::vertex_iterator> vItr;
+  int ABSOLUTE_UNIT = INT_MAX / 2; // basically infinite, not INT_MAX to prevent overflow
+  Maze::clearVisited(g); // colors: 0 = white, 1 = grey, 2 = black
+  Maze::setNodeWeights(g, ABSOLUTE_UNIT);
+  for (vItr = boost::vertices(g); vItr.first != vItr.second; ++vItr.first) {
+    g[*(vItr.first)].pred = NULL;
+  }
+  // sift source to root
+  g[start].weight = 0;
+  pq.minHeapInsert(start, g);
+
+  while (pq.size() > 0) {
+    Graph::vertex_descriptor vertexCurrent = pq.extractMinHeapMinimum(g);
+    g[vertexCurrent].visited = 2;
+    // update weight to g-cost
+    if (vertexCurrent != start) {
+      g[vertexCurrent].weight = g[g[vertexCurrent].pred].weight
+        + g[boost::edge(vertexCurrent, g[vertexCurrent].pred, g).first].weight;
+    }
+
+    // compile the path stack if we've found the output
+    if (vertexCurrent == end) {
+      output.push(end);
+      while (vertexCurrent != start) {
+        output.push(vertexCurrent);
+        vertexCurrent = g[vertexCurrent].pred;
+      }
+      return output;
+    }
+
+    std::pair<Graph::out_edge_iterator, Graph::out_edge_iterator> adjEdgeItr;
+
+    // updating adjacent vertices
+    for (adjEdgeItr = boost::out_edges(vertexCurrent, g);
+      adjEdgeItr.first != adjEdgeItr.second;
+      ++adjEdgeItr.first)
+    {
+      // dunno why I have to do this, but it fixes a compiler error
+      auto edge = *adjEdgeItr.first;
+      // relax edges
+      Graph::vertex_descriptor source = boost::source(edge, g);
+      Graph::vertex_descriptor target = boost::target(edge, g);
+      // a* costs
+      // actual cost from start
+      int GCost = g[source].weight + g[edge].weight;
+      // total cost estimate (g-cost + taxicab/heuristic cost)
+      int FCost = GCost + taxicab(g, target, end);
+      // update costs
+      switch (g[target].visited) {
+      case 1:
+        if (g[g[target].pred].weight + g[boost::edge(target, g[target].pred, g).first].weight > GCost) {
+          g[target].weight = FCost;
+          g[target].pred = source;
+          g[target].visited = 1;
+        }
+        break;
+      case 0:
+        g[target].weight = FCost;
+        g[target].pred = source;
+        g[target].visited = 1;
+        pq.minHeapInsert(target, g);
+        break;
+      case 2:
+        break;
+      }
+    }
+    // restore priority queue
+    // a bit inefficient, but gets the job done
+    // better for denser graphs
+    pq.buildMinHeap(pq.size(), g);
+  }
+
+  // output is an empty stack
+  return output;
+}
+
+void findShortestPathBFS(Graph &g, Graph::vertex_descriptor &start, Graph::vertex_descriptor &end) {
+    // Queue for vertices
+    queue<Graph::vertex_descriptor> q;
+
     // Clear all visited nodes
+    Maze::clearVisited(g);
+    
+    // Set the starting node predecessor to NULL
+    g[start].pred = NULL;
 
+    q.push(start);
+
+    while (!q.empty()) {
+        // Grab the node at the front of the queue
+        Graph::vertex_descriptor &next = q.front();
+        
+        if (next == end) {
+            cout << "BFS has found a path!\n\n";
+            return;
+        }
+       
+        // At this point, the next node in the queue is not the end, so mark it as visited and remove it
+        g[next].visited = 2;
+        q.pop();
+
+        // Get its adjacent nodes
+        pair<Graph::adjacency_iterator, Graph::adjacency_iterator> vItrRange = adjacent_vertices(next, g);
+
+        // Loop over adjacent nodes and add them to the queue
+        for (Graph::adjacency_iterator vItr = vItrRange.first; vItr != vItrRange.second; ++vItr) {
+            // If the nodes in the adjaceny list havent been visited, add them to the queue
+            if (g[*(vItr.first)].visited != 2) {
+                g[*(vItr.first)].pred = next;
+                q.push(*(vItr.first));
+            }
+        }
+        
+    }
+
+    cout << "BFS could not find a path\n\n";
 }
 
 bool relax(Graph& g, Graph::vertex_descriptor& start, Graph::vertex_descriptor& end) {
@@ -306,10 +546,10 @@ void dijkstra(Graph& g, Graph::vertex_descriptor source) {
     // initializing/resetting all vertices for search
     std::pair<Graph::vertex_iterator, Graph::vertex_iterator> vItr;
     int ABSOLUTE_UNIT = INT_MAX / 2; // basically infinite, not INT_MAX to prevent overflow
+    Maze::clearVisited(g); // colors: 0 = white, 1 = grey, 2 = black
+    Maze::setNodeWeights(g, ABSOLUTE_UNIT);
     for (vItr = boost::vertices(g); vItr.first != vItr.second; ++vItr.first) {
         g[*(vItr.first)].pred = NULL;
-        g[*(vItr.first)].weight = ABSOLUTE_UNIT;
-        g[*(vItr.first)].visited = 0; // 0 = white, 1 = grey, 2 = black
         pq.minHeapInsert(*vItr.first, g);
     }
 
@@ -379,4 +619,9 @@ bool bellmanFord(Graph& g, Graph::vertex_descriptor source) {
         }
     }
     return true;
+}
+
+int taxicab(Graph& g, Graph::vertex_descriptor v1, Graph::vertex_descriptor v2) {
+  return std::abs(g[v1].cell.first - g[v2].cell.first) 
+    + std::abs(g[v1].cell.second - g[v2].cell.second);
 }

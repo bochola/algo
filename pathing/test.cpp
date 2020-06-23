@@ -87,6 +87,36 @@ namespace Test {
             cout << "Done with " << fn << endl;
         }
     }
+    
+    /**
+     * DFS Test Function.
+     * Does both stack and recursive DFS.
+     * 
+     * @param void
+     * @return void
+     */ 
+    inline void DFSTest() {
+        std::vector<std::string> mazeFiles{"Files/maze0.txt"};
+        for (std::string fn : mazeFiles) {
+            ifstream *fin = new ifstream();
+            fin->open(fn);
+            Maze m(fin);
+            Graph g;
+            m.mapMazeToGraph(g);
+
+            // Declare start and end as first and last vertices
+            Graph::vertex_descriptor v1 = 0;
+            Graph::vertex_descriptor v2 = num_vertices(g)-1;
+            
+            // Stack search
+            findShortestPathDFS(g,v1,v2);
+
+            // Recursive search
+            findPathDFSRecursive(g,v1,v2);
+
+            cout << "Done with " << fn << endl;
+        }
+    }
 } // namespace Test
 
 #endif // TEST_CPP
@@ -96,4 +126,5 @@ int main() {
     Test::dijkstraTest();
     Test::bellmanFordTest();
     Test::readMazeFromFileAndEcho();
+    Test::DFSTest();
 }
