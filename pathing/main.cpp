@@ -1,75 +1,39 @@
-#include <iostream>
-#include <limits.h>
-#include <vector>
-#include <list>
-#include <fstream>
-#include <queue>
+#include "Maze.h"
 
-#include <boost/graph/adjacency_list.hpp>
+int main() {
+    cout << "Welcome to the Maze and Graph Processing Program" << endl;
 
-using namespace boost;
-using namespace std;
+    string input = "";
 
-struct VertexProperties;
-struct EdgeProperties;
+    while(input != "quit") {
+        try {
+            cout << "Enter filename or \"quit\": ";
+            cin >> input;
 
-typedef adjacency_list<vecS, vecS, bidirectionalS, VertexProperties, EdgeProperties> Graph;
+            if(input.find("graph") != string::npos) {
+                cout << "Reading Graph File" << endl;
+                // INSERT GRAPH PROCESSING
 
-struct VertexProperties
-{
-   pair<int,int> cell; // maze cell (x,y) value
-   Graph::vertex_descriptor pred; // predecessor node
-   int weight;
-   bool visited;
-   bool marked;
-};
+                cout << "End Graph File Processing" << endl;
+            }
+            else if(input.find("maze") != string::npos) {
+                cout << "Reading Maze File" << endl;
+                ifstream* fin = new ifstream();
+                fin->open(input);
+                Maze m(fin);
 
-// Create a struct to hold properties for each edge
-struct EdgeProperties
-{
-   int weight;
-   bool visited;
-   bool marked;
-};
+                // INSERT MAZE PROCESSING
+                Graph g;
+                m.mapMazeToGraph(g);
 
-typedef adjacency_list<vecS, vecS, bidirectionalS, VertexProperties, EdgeProperties> Graph;
+                cout << "End Maze File Processing" << endl;
+            }
 
-// typedef property<edge_weight_t, int> EdgeProperty;
+        }
+        catch(...) {
+            cout << "Error Occurred" << endl;
+        }
+    }
 
-#define LargeValue 99999999
-
-void clearVisited(Graph &g)
-// Mark all nodes in g as not visited.
-
-void setNodeWeights(Graph &g, int w)
-// Set all node weights to w.
-
-void clearMarked(Graph &g)
-   
-int main()
-{
-   try
-   {
-      ifstream fin;
-
-      // Read the maze from the file.
-      string fileName = "yourpath/maze1.txt";
-      
-      fin.open(fileName.c_str());
-      if (!fin)
-      {
-         cerr << "Cannot open " << fileName << endl;
-         exit(1);
-      }
-
-      maze m(fin);
-      fin.close();
-      
-      m.print(m.numRows()-1,m.numCols()-1,0,0);
-
-      Graph g;
-      m.mapMazeToGraph(g);
-
-      cout << g << endl;
-   }
+    cout << "Exiting Program" << endl;
 }
